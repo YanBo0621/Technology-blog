@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang=javascript>
+  <head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="博客，闫波的博客，学海无涯苦作舟">
+  <meta name="keywords" content>
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>vue 结合 css3 动画写弹幕 | 风舟度</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>风舟度</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/tags" class="item-link">标签</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>vue 结合 css3 动画写弹幕</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2019/06/30</time>
+            
+            
+          </div>
+          <h2 id="vue"><a href="#vue" class="headerlink" title="vue"></a>vue</h2><template>
+   <div class="homelist">
+      <div class="barrage-div" ref="marquee">
+        <img :src="mathimg">
+        新订单来自  前
+      </div>
+   </div>
+</template>
+
+<h2 id="css"><a href="#css" class="headerlink" title="css"></a>css</h2><p>.barrage-div{<br>position: fixed;<br>box-sizing: border-box;<br>color: #fff;<br>bottom: 60px;<br>left:-300px;<br>height: 30px;<br>line-height: 30px;<br>padding-right: 10px;<br>border: 0px solid #fff;<br>border-radius: 15px;<br>overflow-x: hidden;<br>background-color: rgba(0,0,0,0.5);<br>img{<br>width: 26px;<br>height: 26px;<br>vertical-align: middle; //内联块元素，居中对齐<br>padding-left: 2px;<br>border-radius: 50%;<br>}
+}<br>@keyframes myfirst<br>{
+0% {left:100%;}<br>25% {left:50%}<br>50% {left:0%}<br>75% {left:-50%}<br>100% {left:-100%;}<br>}</p>
+<p>@-webkit-keyframes myfirst /_ Safari and Chrome _/<br>{
+0% {left:100%;}<br>25% {left:50%}<br>50% {left:0%}<br>75% {left:-50%}<br>100% {left:-100%;}<br>}</p>
+<h2 id="js"><a href="#js" class="headerlink" title="js"></a>js</h2><p>barrageList:[//data 定义<br>{name:’叶落森’,time:’20s’,img:’../../../static/images/head1.jpg’},<br>{name:’785 瞅瞅’,time:’10s’,img:’../../../static/images/head2.jpg’},<br>{name:’落泪～’,time:’60s’,img:’../../../static/images/head3.jpg’},<br>{name:’忧伤的小丑～’,time:’45s’,img:’../../../static/images/head4.jpg’},<br>{name:’happy’,time:’28s’,img:’../../../static/images/head5.jpg’},<br>{name:’yls’,time:’48s’,img:’../../../static/images/head6.jpg’},<br>],</p>
+<p>marqueeload(value){//methods 中的方法<br>let mathnum=Math.floor(Math.random()*20+1)<br>this.mathname=this.barrageList[mathnum].name<br>this.mathtime=this.barrageList[mathnum].time<br>this.mathimg=this.barrageList[mathnum].img<br>this.$refs.marquee.style.animation=’myfirst 8s’<br>      this.$refs.marquee.style.animationTimingFunction=’linear’<br>}</p>
+<p>mounted() {<br>let that=this;<br>that.marqueeload()<br> this.time1=setInterval(()=&gt;{<br>that.$refs.marquee.style.animation=’’<br>        that.$refs.marquee.style.animationTimingFunction=’’<br>that.marqueeload()<br>},8000)<br>},<br>beforeDestroy(){<br>clearInterval(this.time1);<br>this.time1=null<br>}</p>
+
+        </section>
+    </article>
+    
+        <!-- disqus 评论框 start -->
+        <div class="comment">
+            <div id="disqus_thread" class="disqus-thread">
+              <i>Loading comments box needs to over the wall</i>
+            </div>
+        </div>
+        <!-- disqus 评论框 end -->
+    
+    
+        <!-- livere 评论框 start -->
+        <div class="comment">
+            <div id="lv-container" data-id="city" data-uid="YYY123"></div>
+        </div>
+        <!-- livere 评论框 end -->
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#vue"><span class="toc-number">1.</span> <span class="toc-text">vue</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#css"><span class="toc-number">2.</span> <span class="toc-text">css</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#js"><span class="toc-number">3.</span> <span class="toc-text">js</span></a></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+<!-- disqus 公共JS代码 -->
+<script type="text/javascript">
+  /* * * CONFIGURATION VARIABLES * * */
+  var disqus_shortname = "yanbo-Disqus";
+  var disqus_identifier = "http://yoursite.com/2019/06/30/vue结合css3动画写弹幕/";
+  var disqus_url = "http://yoursite.com/2019/06/30/vue结合css3动画写弹幕/";
+
+  isAgent(getDisqus)
+
+  // determine user agent in China
+  function isAgent(cb) {
+    var url = '//graph.facebook.com/feed?callback=h';
+    var xhr = new XMLHttpRequest();
+    var called = false;
+    xhr.open('GET', url);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+      called = true;
+      cb(true);
+      }
+    };
+    xhr.send();
+    // timeout 1s, this facebook API is very fast.
+    setTimeout(function() {
+      if (!called) {
+      xhr.abort();
+      cb(false)
+      }
+    }, 1000);
+  }
+
+  function getDisqus(isAgent) {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; 
+    dsq.async = true
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq)
+  }
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+<script type="text/javascript">
+  (function(d, s) {
+      var j, e = d.getElementsByTagName(s)[0];
+
+      if (typeof LivereTower === 'function') { return; }
+
+      j = d.createElement(s);
+      j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+      j.async = true;
+
+      e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2019 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>
