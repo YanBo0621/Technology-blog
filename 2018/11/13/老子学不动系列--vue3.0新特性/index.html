@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang=javascript>
+  <head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="博客，闫波的博客，学海无涯苦作舟">
+  <meta name="keywords" content>
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>老子学不动系列--vue3.0新特性 | 风舟度</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>风舟度</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/tags" class="item-link">标签</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>老子学不动系列--vue3.0新特性</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2018/11/13</time>
+            
+            
+              | 
+                  <i class="fa fa-tag" aria-hidden="true"></i>
+                
+               
+  <a href="/tags/#vue" class='tag'>vue</a>
+
+
+            
+          </div>
+          <h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><blockquote>
+<p>在 9 月 30 日的 Vue.js 伦敦大会上， 作者尤雨溪介绍了 Vue 下一个版本将要发布的内容，以及 Vue 3.0 的开发路线，和后面版本的发展情况。虽然，Vue 3.0 版本的正式版还没有发布，不过作为 vue 项目快速构建工具的 vue-cli 早已发布，我们可以通过 vue-cli 来了解 vue 3.0 的一些情况。</p>
+</blockquote>
+<blockquote>
+<p>作为 Vue 的主要版本，Vue 3.0 带来了诸多的重大变更，不过，开发组也非常重视兼容性问题：除了渲染函数 API 和作用域插槽语法之外的所有内容都将保持不变，或者通过兼容性构建让其与 2.x 保持兼容。总的来说，Vue 3.0 虽然会对顶级 API 进行重大的修整，但依然会保持与 2.x 的兼容。此外，2.x 的最后一个次要版本将成为 LTS，并在 3.0 发布后继续享受 18 个月的 bug 和安全修复更新。</p>
+</blockquote>
+<p>欲了解更多的详情，可以参考下面的链接：<a href="https://zhuanlan.zhihu.com/p/50297992" target="_blank" rel="noopener">Vue 3.0 版本发布计划</a></p>
+<h2 id="重构"><a href="#重构" class="headerlink" title="重构"></a>重构</h2><h3 id="代码结构"><a href="#代码结构" class="headerlink" title="代码结构"></a>代码结构</h3><blockquote>
+<p>为了实现更清晰、更易维护的源代码架构，尤雨溪表示将从头开始重写 3.0，并将一些内部功能分解为单独的包，以便隔离复杂性。如下图是 vue 3.0 的源码目录结构图。</p>
+</blockquote>
+<p><img src="https://s2.ax1x.com/2019/07/17/Zq1vqS.png" alt="img"></p>
+<blockquote>
+<p>前文说过，Vue 团队打算在从零开始编写 3.0 版本，为的是“达到更加清晰和更易维护的架构，特别是为了让代码的贡献变得容易”。为了降低复杂性，对复杂性进行隔离，开发团队将一些内部功能拆分为了多个单独的包。例如，observer 模块将成为一个单独的包，拥有自己对外的 API 和自己的测试用例。</p>
+</blockquote>
+<blockquote>
+<p>另外，代码库现在改为用 TypeScript 编写，虽然这会使得“熟练 TypeScript”成为对新代码库进行贡献的一个前置要求，不过我们相信有类型信息配合 IDE 的支持，对于一个新的贡献者来说，要做出有意义的贡献，实际上反而会更加容易。</p>
+</blockquote>
+<blockquote>
+<p>除此之外，Vue 还对改进编译器、支持 IE 11、其他运行时改进和改进观察机制等方面内容。</p>
+</blockquote>
+<h3 id="监测机制"><a href="#监测机制" class="headerlink" title="监测机制"></a>监测机制</h3><blockquote>
+<p>3.0 将带来一个基于 Proxy 的 observer 实现，它可以提供覆盖语言 (JavaScript——译注) 全范围的响应式能力，消除了当前 Vue 2 系列中基于 Object.defineProperty 所存在的一些局限，这些局限包括：</p>
+</blockquote>
+<ul>
+<li>对属性的添加、删除动作的监测；</li>
+<li>对数组基于下标的修改、对于 .length 修改的监测；</li>
+<li>对 Map、Set、WeakMap 和 WeakSet 的支持；</li>
+</ul>
+<p>另外，新的 observer 还提供了如下的一些特性：</p>
+<blockquote>
+<p>公开的用于创建 observable 的 API：这为小型到中型的应用提供了一种轻量级的、极其简单的跨组 件状态管理解决方案。<br>默认为惰性监测（Lazy Observation）。在 2.x 版本中，任何响应式数据，不管它的大小如何都会在启动的时候监测功能。如果数据量很大的话，在应用启动的时候就可能造成严重的性能消耗。而在 3.x 版本中，只有应用的初始可见部分所用到的数据会被监测，更不用说这种监测方案本身其实也是更加快的。</p>
+</blockquote>
+<p><strong>更精准的变动通知</strong>：举个例子：在 2.x 系列中，通过 Vue.set 强制添加一个新的属性，将导致所有依赖于这个对象的 watch 函数都会被执行一次；而在 3.x 中，只有依赖于这个具体属性的 watch 函数会被通知到。</p>
+<p><strong>不可变监测对象</strong>：我们可以创建一个对象的“不可变”版本，以此来阻止对他的修改——包括他的嵌套属性，除非系统内部临时解除了这个限制。这种机制可以用来冻结传递到组件属性上的对象和处在 mutation 范围外的 Vuex 状态树。</p>
+<p><strong>更好的调试能力</strong>：通过使用新增的 renderTracked 和 renderTriggered 钩子，我们可以精确地追踪到一个组件发生重渲染的触发时机和完成时机及其原因。</p>
+<p><img src="https://s2.ax1x.com/2019/07/17/Zq3p5j.png" alt="img"></p>
+<h3 id="编译器"><a href="#编译器" class="headerlink" title="编译器"></a>编译器</h3><blockquote>
+<p>Vue 3.0 与编译器相关的代码编译将会有一个大的提升，用一句话概括为：“摇树友好”的输出；更多的 AOT 优化；更良好的解析错误；支持 source map。</p>
+</blockquote>
+<ul>
+<li>如果采用的是支持“摇树优化”的打包器，模板中使用到的那些可选特性，在生成的代码中将通过 ES 的模块语法导入；而在打包后的文件中，那些没用到的可选特性就会被“摇掉”。</li>
+<li>由于新的虚拟 DOM 实现所带来的提升，我们可以执行一些更加高效的编译耗时优化，如静态树提升(static tree hoisting)、静态属性提升(static props hoisting)；以及为运行时提供一些来自编译器的提示，以此避开子组件的规范过程 (children normalization)；提供 VNode 快速创建路径等等。</li>
+<li>解析器重写，以便在对模板进行编译发生错误时，可以提供错误发生的位置信息；除此之外还可以带来对模板的 source map 支持；还可以支持第三方工具如 eslint-plugin-vue 和 IDE 的语言服务 (language services) 特性。</li>
+</ul>
+<h3 id="IE-11-兼容"><a href="#IE-11-兼容" class="headerlink" title="IE 11 兼容"></a>IE 11 兼容</h3><blockquote>
+<p>新的代码库目前只针对主流浏览器，而且我们假定他们都支持 ES2015。但是，哎，我们也知道在可预见的未来还有很多用户仍然需要支持 IE11。除了 Proxy 外，大多数 ES2015 的特性都可以用转译或者垫片的方式在 IE11 中使用。我们的计划是另外单独实现一个具有同样 API 的替代性 observer，不过是基于老式的 Object.defineProperty API；然后再通过单独构建一个使用这个实现的 Vue 3.x 版本 (build) 进行发布，不过这个单独的版本还是会有 Vue 2.x 在变动探测方面所存在的问题，所以它其实并不是一个完全兼容 3.x 的一个版本。我们也意识到这会给第三方库的作者们带来某些不便，因为他们需要考虑两个不同版本之间的兼容性问题，不过当我们真的推进到那个阶段时，那时我们肯定会确保提供一份清晰的指导。</p>
+</blockquote>
+<blockquote>
+<p>当然，Vue 3.0 还处于开发阶段，最早发布也会等到 2019 年了，让我们拭目以待吧。</p>
+</blockquote>
+<h2 id="vue-cli-3-0"><a href="#vue-cli-3-0" class="headerlink" title="vue-cli 3.0"></a>vue-cli 3.0</h2><blockquote>
+<p>vue-cli 是 vue 官方团队推出的一款快速开发 vue 项目的构建工具，具有开箱即用并且提供简洁的自定义配置等功能。 vue-cli 从 2.0 到 3.0 修改了众多的东西，下面就让我们来了解下。</p>
+</blockquote>
+<h3 id="创建项目"><a href="#创建项目" class="headerlink" title="创建项目"></a>创建项目</h3><p>从 vue-cli 3.0 开始，vue 的安装命令从 vue-cli 改成了 @vue/cli。例如：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">npm install -g @vue/cli</span><br></pre></td></tr></table></figure>
+
+<p>使用 vue-cli 3.0 创建项目的命令如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">vue create my-project</span><br></pre></td></tr></table></figure>
+
+<p>除了命令创建外，3.0 还增加了图形化界面创建以及管理 vue 项目的功能，<br>在创建新项目时还可以混合选用多种集成。当我们使用 vue ui 命令后即可使用图形化的方式来操作 vue 项目的源码。</p>
+<p><img src="https://s2.ax1x.com/2019/07/17/Zq3ErT.png" alt="img"></p>
+<p>需要说明的是，在初始化项目时系统会默认生成 package.json 和 package-lock.json 两个配置文件，它们的区别在于 package.json 只能锁定大版本号，而 package-lock.json 则能锁定安装时包的版本号，以保证多人开发时项目版本号的一致。同时，Vue 在 3.0 版本删除了 static 目录，并新增了 public 目录，该目录主要用于存放不被 webpack 处理的文件和资源。</p>
+<p>当我们使用 create 命令创建项目时，系统会要求我们选择一些东西。例如：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Vue CLI v3.0.3</span><br><span class="line">? Please pick a preset:</span><br><span class="line">  default (babel, eslint)</span><br><span class="line">&gt; Manually select features</span><br></pre></td></tr></table></figure>
+
+<p>Vue 3.0 版本支持预设配置 和 用户自定义配置，其中自定义功能配置包括以下功能：</p>
+<ul>
+<li>TypeScript</li>
+<li>Progressive Web App (PWA) Support</li>
+<li>Router</li>
+<li>Vuex</li>
+<li>CSS Pre-processors</li>
+<li>Linter / Formatter</li>
+<li>Unit Testing</li>
+<li>E2E Testing</li>
+</ul>
+<p>可以发现，3.0 版本新加入了 TypeScript 以及 PWA 的支持。</p>
+<p>1，在选择 CSS 预处理器后会提示选择哪一种预处理器？</p>
+<ul>
+<li>Scss/Sass</li>
+<li>Less</li>
+<li>Stylus</li>
+</ul>
+<p>2，eslint 规范的选择</p>
+<ul>
+<li><p>ESLint with error prevention only</p>
+</li>
+<li><p>ESLint + Airbnb config</p>
+</li>
+<li><p>ESLint + Standard config</p>
+</li>
+<li><p>ESLint + Prettier<br>3，选择 Babel，PostCSS，ESLint 等自定义配置的存放位置</p>
+</li>
+<li><p>In dedicated config files</p>
+</li>
+<li><p>In package.json</p>
+</li>
+</ul>
+<h3 id="目录结构"><a href="#目录结构" class="headerlink" title="目录结构"></a>目录结构</h3><p><img src="https://s2.ax1x.com/2019/07/17/Zq8hAe.png" alt="img"></p>
+<p>相比于 Vue 2.0 版本来说，Vue 3.0 的目录结构则简洁很多，下面是 Vue 项目文件的具体含义及其作用说明。</p>
+<ul>
+<li>node_modules：项目依赖的第三方模块；</li>
+<li>public：移除 static 目录，新增 public 目录，并且 index.html 移动到 public 中，该目录主要用于存放如图片、字体等静态资源和打包后的文件；</li>
+<li>src：源码存放目录，主要可以存放的有 assets 资源文件和源代码；</li>
+<li>babelrc：将 es6 代码转换成浏览器能够识别的代码；</li>
+<li>editorconfig：定义项目编码规范，优先级高于编译器设置的优先级；</li>
+<li>index.html：项目入口文件，可以配置 meta 信息或统计代码等；</li>
+<li>package.json：项目配置文件，该文件主要定义了项目所需要的各种依赖模块和项目的一些配置信息；</li>
+<li>package-lock.json：锁定安装时包的版本号，多人协作开发会用到；</li>
+<li>webpack.config.js：webpack 模块化打包的一些配置；</li>
+</ul>
+<h3 id="自定义配置"><a href="#自定义配置" class="headerlink" title="自定义配置"></a>自定义配置</h3><p>从 3.0 版本开始，系统会在项目的根目录生成一个 vue.config.js 文件，可以在此文件中添加自定义的一些配置。下面是一些常用的自定义配置：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">module.exports = &#123;</span><br><span class="line">  baseUrl: &apos;/&apos;,</span><br><span class="line">  outputDir: &apos;dist&apos;,</span><br><span class="line">  lintOnSave: true,</span><br><span class="line">  compiler: false,</span><br><span class="line">  // 调整内部的 webpack 配置。</span><br><span class="line">  // 查阅 https://github.com/vuejs/vue-doc-zh-cn/vue-cli/webpack.md</span><br><span class="line">  chainWebpack: () =&gt; &#123;&#125;,</span><br><span class="line">  configureWebpack: () =&gt; &#123;&#125;,</span><br><span class="line">  // 配置 webpack-dev-server 行为。</span><br><span class="line">  devServer: &#123;</span><br><span class="line">    open: process.platform === &apos;darwin&apos;,</span><br><span class="line">    host: &apos;0.0.0.0&apos;,</span><br><span class="line">    port: 8080,</span><br><span class="line">    https: false,</span><br><span class="line">    hotOnly: false,</span><br><span class="line">    // 查阅 https://github.com/vuejs/vue-doc-zh-cn/vue-cli/cli-service.md#配置代理</span><br><span class="line">    proxy: null, // string | Object</span><br><span class="line">    before: app =&gt; &#123;&#125;</span><br><span class="line">  &#125;</span><br><span class="line">  ....</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调整 webpack 配置最简单的方式就是在 vue.config.js 中的 configureWebpack 选项提供一个对象，该对象将会被 webpack-merge 合并入最终的 webpack 配置。例如：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">module.exports = &#123;</span><br><span class="line">  configureWebpack: &#123;</span><br><span class="line">    plugins: [</span><br><span class="line">      new MyAwesomeWebpackPlugin()</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果想要修改插件选项的参数，读者可以阅读 webpack-chain 的 API 获取更多相关的一些源码。例如：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// vue.config.js</span><br><span class="line">module.exports = &#123;</span><br><span class="line">  chainWebpack: config =&gt; &#123;</span><br><span class="line">    config</span><br><span class="line">      .plugin(&apos;html&apos;)</span><br><span class="line">      .tap(args =&gt; &#123;</span><br><span class="line">        return [/* new args to pass to html-webpack-plugin&apos;s constructor */]</span><br><span class="line">      &#125;)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>需要说明的是，当我们更改一个 webpack 配置的时候，可以通过 <code>vue inspect</code> &gt; <code>output.js</code> 输出完整的配置清单，注意它输出的并不是一个有效的 webpack 配置文件，而是一个用于审查的被序列化的格式。</p>
+<h3 id="ESLint、Babel、browserslist"><a href="#ESLint、Babel、browserslist" class="headerlink" title="ESLint、Babel、browserslist"></a>ESLint、Babel、browserslist</h3><ul>
+<li>Babel 可以通过.babelrc 或 package.json 中的 babel 字段进行配置。</li>
+<li>ESLint 可以通过.eslintrc 或 package.json 中的 eslintConfig 字段进行配置。</li>
+<li>package.json 中的 browserslist 字段指定了该项目的目标浏览器支持范围。</li>
+</ul>
+<h3 id="browserslist"><a href="#browserslist" class="headerlink" title="browserslist"></a>browserslist</h3><p>我们可以在 package.json 配置文件中看到 browserslist 字段。例如：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&gt; 1%</span><br><span class="line">last 2 versions</span><br><span class="line">not ie &lt;= 8</span><br></pre></td></tr></table></figure>
+
+<p>使用 npx browserslist 可以查看项目的浏览器兼容情况，vue 的支持情况如下表：<br><img src="https://s2.ax1x.com/2019/07/17/Zq87ct.png" alt="img"></p>
+<h3 id="public-目录"><a href="#public-目录" class="headerlink" title="public 目录"></a>public 目录</h3><p>vue 约定 public/index.html 作为入口模板会通过 html-webpack-plugin 插件处理。在构建过程中，资源链接将会自动注入其中。除此之外，vue-cli 也自动注入资源提示（preload/prefetch），在启用 PWA 插件时注入 manifest/icon/链接，并引入(inlines) webpack runtime / chunk manifest 清单已获得最佳性能。</p>
+<p>在 JavaScript 或者 SCSS 中通过 相对路径 引用的资源会经过 webpack 处理，放置在 public 文件夹的资源可以通过绝对路径引用，这些资源将会被复制，而不经过 webpack 处理。</p>
+<p>并且，图片最好使用相对路径经过 webpack 处理，这样可以避免很多因为修改网站根目录导致的图片 404 问题。</p>
+<h3 id="新增功能"><a href="#新增功能" class="headerlink" title="新增功能"></a>新增功能</h3><p>除此之外，Vue-cli 还带来了两个比较有诱惑力的功能：对 TypeScript 和 PWA 的支持；</p>
+<h3 id="TypeScript-支持"><a href="#TypeScript-支持" class="headerlink" title="TypeScript 支持"></a>TypeScript 支持</h3><p>从 3.0 版本开始中，系统选择启用 TypeScript 语法，从而大大的简化了代码，不过也带来了一些书写上的约束。例如：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">import &#123; Component, Emit, Inject, Model, Prop, Provide, Vue, Watch &#125; from &apos;vue-property-decorator&apos;</span><br><span class="line">const s = Symbol(&apos;baz&apos;)</span><br><span class="line">@Component</span><br><span class="line">export class MyComponent extends Vue &#123;</span><br><span class="line"> @Emit()</span><br><span class="line"> addToCount(n: number)&#123; this.count += n &#125;</span><br><span class="line"> @Emit(&apos;reset&apos;)</span><br><span class="line"> resetCount()&#123; this.count = 0 &#125;</span><br><span class="line"> @Inject() foo: string</span><br><span class="line"> @Inject(&apos;bar&apos;) bar: string</span><br><span class="line"> @Inject(s) baz: string</span><br><span class="line"> @Model(&apos;change&apos;) checked: boolean</span><br><span class="line"> @Prop()</span><br><span class="line"> propA: number</span><br><span class="line"> @Prop(&#123; default: &apos;default value&apos; &#125;)</span><br><span class="line"> propB: string</span><br><span class="line"> @Prop([String, Boolean])</span><br><span class="line"> propC: string | boolean</span><br><span class="line"> @Provide() foo = &apos;foo&apos;</span><br><span class="line"> @Provide(&apos;bar&apos;) baz = &apos;bar&apos;</span><br><span class="line"> @Watch(&apos;child&apos;)</span><br><span class="line"> onChildChanged(val: string, oldVal: string) &#123; &#125;</span><br><span class="line"> @Watch(&apos;person&apos;, &#123; immediate: true, deep: true &#125;)</span><br><span class="line"> onPersonChanged(val: Person, oldVal: Person) &#123; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码等价于下面的代码：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">const s = Symbol(&apos;baz&apos;)</span><br><span class="line"></span><br><span class="line">export const MyComponent = Vue.extend(&#123;</span><br><span class="line">  name: &apos;MyComponent&apos;,</span><br><span class="line">  inject: &#123;</span><br><span class="line">    foo: &apos;foo&apos;,</span><br><span class="line">    bar: &apos;bar&apos;,</span><br><span class="line">    [s]: s</span><br><span class="line">  &#125;,</span><br><span class="line">  model: &#123;</span><br><span class="line">    prop: &apos;checked&apos;,</span><br><span class="line">    event: &apos;change&apos;</span><br><span class="line">  &#125;,</span><br><span class="line">  props: &#123;</span><br><span class="line">    checked: Boolean,</span><br><span class="line">    propA: Number,</span><br><span class="line">    propB: &#123;</span><br><span class="line">      type: String,</span><br><span class="line">      default: &apos;default value&apos;</span><br><span class="line">    &#125;,</span><br><span class="line">    propC: [String, Boolean],</span><br><span class="line">  &#125;,</span><br><span class="line">  data () &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      foo: &apos;foo&apos;,</span><br><span class="line">      baz: &apos;bar&apos;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  provide () &#123;</span><br><span class="line">    return &#123;</span><br><span class="line">      foo: this.foo,</span><br><span class="line">      bar: this.baz</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  methods: &#123;</span><br><span class="line">    addToCount(n)&#123;</span><br><span class="line">      this.count += n</span><br><span class="line">      this.$emit(&quot;add-to-count&quot;, n)</span><br><span class="line">    &#125;,</span><br><span class="line">    resetCount()&#123;</span><br><span class="line">      this.count = 0</span><br><span class="line">      this.$emit(&quot;reset&quot;)</span><br><span class="line">    &#125;,</span><br><span class="line">    onChildChanged(val, oldVal) &#123; &#125;,</span><br><span class="line">    onPersonChanged(val, oldVal) &#123; &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">  watch: &#123;</span><br><span class="line">    &apos;child&apos;: &#123;</span><br><span class="line">      handler: &apos;onChildChanged&apos;,</span><br><span class="line">      immediate: false,</span><br><span class="line">      deep: false</span><br><span class="line">    &#125;,</span><br><span class="line">    &apos;person&apos;: &#123;</span><br><span class="line">      handler: &apos;onPersonChanged&apos;,</span><br><span class="line">      immediate: true,</span><br><span class="line">      deep: true</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>可以发现，使用 TypeScript 语法后，代码大为精简。</p>
+<h3 id="PWA-支持"><a href="#PWA-支持" class="headerlink" title="PWA 支持"></a>PWA 支持</h3><p>当我们选择启用 PWA 功能时，在打包生成的代码时会默认生成 service-worker.js 和 manifest.json 相关文件。熟悉 PWA 的同学都知道 service-worker.js 和 manifest.json 是 PWA 的重要配置文件。如果读者还不了解 PWA，点击 PWA 官方文档 查看。</p>
+<p>默认情况 service-worker 采用的是 precache，可以通过配置 pwa.workboxPluginMode 自定义缓存策略。例如：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">module.exports = &#123;</span><br><span class="line">  // ...其它 vue-cli 插件选项...</span><br><span class="line">  pwa: &#123;</span><br><span class="line">    workboxPluginMode: &apos;InjectManifest&apos;,</span><br><span class="line">    workboxOptions: &#123;</span><br><span class="line">      // swSrc 中 InjectManifest 模式下是必填的。</span><br><span class="line">      swSrc: &apos;dev/sw.js&apos;,</span><br><span class="line">      // ...其它 Workbox 选项...</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>vue-cli 致力于将 Vue 生态中的工具基础标准化，并确保各种构建工具能够基于智能的默认配置即可平衡衔接，提高开发效率。虽然，vue 3.0 还处于开发阶段，不过相信在不久的将来一定会给开发者带来惊喜，让我们拭目以待吧。</p>
+<p>参考：<br><a href="http://www.php.cn/js-tutorial-400475.html" target="_blank" rel="noopener">http://www.php.cn/js-tutorial-400475.html</a><br><a href="https://github.com/vuejs/vue-cli/" target="_blank" rel="noopener">https://github.com/vuejs/vue-cli/</a><br><a href="https://github.com/vuejs/vue-cli/blob/dev/docs/README.md" target="_blank" rel="noopener">https://github.com/vuejs/vue-cli/blob/dev/docs/README.md</a></p>
+
+        </section>
+    </article>
+    
+        <!-- disqus 评论框 start -->
+        <div class="comment">
+            <div id="disqus_thread" class="disqus-thread">
+              <i>Loading comments box needs to over the wall</i>
+            </div>
+        </div>
+        <!-- disqus 评论框 end -->
+    
+    
+        <!-- livere 评论框 start -->
+        <div class="comment">
+            <div id="lv-container" data-id="city" data-uid="YYY123"></div>
+        </div>
+        <!-- livere 评论框 end -->
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#重构"><span class="toc-number">2.</span> <span class="toc-text">重构</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#代码结构"><span class="toc-number">2.1.</span> <span class="toc-text">代码结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#监测机制"><span class="toc-number">2.2.</span> <span class="toc-text">监测机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#编译器"><span class="toc-number">2.3.</span> <span class="toc-text">编译器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#IE-11-兼容"><span class="toc-number">2.4.</span> <span class="toc-text">IE 11 兼容</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#vue-cli-3-0"><span class="toc-number">3.</span> <span class="toc-text">vue-cli 3.0</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#创建项目"><span class="toc-number">3.1.</span> <span class="toc-text">创建项目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#目录结构"><span class="toc-number">3.2.</span> <span class="toc-text">目录结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#自定义配置"><span class="toc-number">3.3.</span> <span class="toc-text">自定义配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ESLint、Babel、browserslist"><span class="toc-number">3.4.</span> <span class="toc-text">ESLint、Babel、browserslist</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#browserslist"><span class="toc-number">3.5.</span> <span class="toc-text">browserslist</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#public-目录"><span class="toc-number">3.6.</span> <span class="toc-text">public 目录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#新增功能"><span class="toc-number">3.7.</span> <span class="toc-text">新增功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#TypeScript-支持"><span class="toc-number">3.8.</span> <span class="toc-text">TypeScript 支持</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#PWA-支持"><span class="toc-number">3.9.</span> <span class="toc-text">PWA 支持</span></a></li></ol></li></ol>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+<!-- disqus 公共JS代码 -->
+<script type="text/javascript">
+  /* * * CONFIGURATION VARIABLES * * */
+  var disqus_shortname = "yanbo-Disqus";
+  var disqus_identifier = "http://yoursite.com/2018/11/13/老子学不动系列--vue3.0新特性/";
+  var disqus_url = "http://yoursite.com/2018/11/13/老子学不动系列--vue3.0新特性/";
+
+  isAgent(getDisqus)
+
+  // determine user agent in China
+  function isAgent(cb) {
+    var url = '//graph.facebook.com/feed?callback=h';
+    var xhr = new XMLHttpRequest();
+    var called = false;
+    xhr.open('GET', url);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+      called = true;
+      cb(true);
+      }
+    };
+    xhr.send();
+    // timeout 1s, this facebook API is very fast.
+    setTimeout(function() {
+      if (!called) {
+      xhr.abort();
+      cb(false)
+      }
+    }, 1000);
+  }
+
+  function getDisqus(isAgent) {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; 
+    dsq.async = true
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq)
+  }
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+<script type="text/javascript">
+  (function(d, s) {
+      var j, e = d.getElementsByTagName(s)[0];
+
+      if (typeof LivereTower === 'function') { return; }
+
+      j = d.createElement(s);
+      j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+      j.async = true;
+
+      e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2019 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>

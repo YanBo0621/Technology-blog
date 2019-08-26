@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang=javascript>
+  <head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta name="description" content="博客，闫波的博客，学海无涯苦作舟">
+  <meta name="keywords" content>
+  
+    <link rel="icon" href="/favicon.ico">
+  
+    
+  <title>koa-router源码分析 | 风舟度</title>
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/lib/jquery.fancybox.min.css">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+
+<body>
+  <header>
+  <div class="header-container">
+    <a class='logo' href="/">
+      <span>风舟度</span>
+    </a>
+    <ul class="right-header">
+      
+        <li class="nav-item">
+          
+            <a href="/" class="item-link">首页</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/about" class="item-link">关于</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/archives" class="item-link">归档</a>
+          
+        </li>
+      
+        <li class="nav-item">
+          
+            <a href="/tags" class="item-link">标签</a>
+          
+        </li>
+      
+    </ul>
+  </div>
+</header>
+
+  <main id='post'>
+  <div class="content">
+    <article>
+        <section class="content markdown-body">
+          <h1>koa-router源码分析</h1>
+          <div class='post-meta'>
+            <i class="fa fa-calendar" aria-hidden="true"></i> <time>2019/07/13</time>
+            
+            
+              | 
+                  <i class="fa fa-tag" aria-hidden="true"></i>
+                
+               
+  <a href="/tags/#koa" class='tag'>koa</a>
+
+
+            
+          </div>
+          <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><pre><code>1月30日,koa-router的作者转移项目权限,预以5000美元的价格出售koa-router
+真的很唏嘘
+用户不能光索取不付出，要么给钱，要么自己PR，不要光有一张嘴。</code></pre><h2 id="代码结构"><a href="#代码结构" class="headerlink" title="代码结构"></a>代码结构</h2><p><img src="https://s2.ax1x.com/2019/07/13/ZhWMPU.png" alt="img"></p>
+<h2 id="执行流程"><a href="#执行流程" class="headerlink" title="执行流程"></a>执行流程</h2><p><img src="https://s2.ax1x.com/2019/07/13/ZhWnaV.png" alt="img"></p>
+<blockquote>
+<p>上面两张图主要将 koa-router 的整体代码结构和大概的执行流程画了出来，画的不够具体。那下面主要讲 koa-router 中的几处的关键代码解读一下。</p>
+</blockquote>
+<p>读代码首先要找到入口文件，那几乎所有的 node 模块的入口文件都会在 <code>package.json</code> 文件中的 main 属性指明了。<code>koa-router</code> 的入口文件就是 <code>lib/router.js</code>。</p>
+<h2 id="第三方模块"><a href="#第三方模块" class="headerlink" title="第三方模块"></a>第三方模块</h2><p>首先先讲几个第三方的 node 模块了解一下，因为后面的代码讲解中会用到，不去看具体实现，只要知道其功能就行：</p>
+<p><a href="https://github.com/koajs/compose" target="_blank" rel="noopener">koa-compose</a>:
+提供给它一个中间件数组， 返回一个顺序执行所有中间件的执行函数。</p>
+<p><a href="https://github.com/jshttp/methods" target="_blank" rel="noopener">methods</a>：
+node 中支持的 http 动词，就是 http.METHODS，可以在终端输出看看。</p>
+<p><a href="https://github.com/pillarjs/path-to-regexp" target="_blank" rel="noopener">path-to-regexp</a>：
+将路径字符串转换成强大的正则表达式，还可以输出路径参数。</p>
+<h2 id="Router-amp-Layer"><a href="#Router-amp-Layer" class="headerlink" title="Router &amp; Layer"></a>Router &amp; Layer</h2><p><img src="https://s2.ax1x.com/2019/07/13/ZhWu5T.png" alt="img"></p>
+<p><code>Router</code> 和 <code>Layer</code> 分别是两个构造函数，分别在<code>router.js</code> 和 <code>layer.js</code>中，<code>koa-router</code>的所有代码也就在这两个文件中，可以知道它的代码量并不是很多。</p>
+<p><strong>Router: 创建管理整个路由模块的实例</strong></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">function Router(opts) &#123;</span><br><span class="line">if (!(this instanceof Router)) &#123;</span><br><span class="line">return new Router(opts);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">this.opts = opts || &#123;&#125;;</span><br><span class="line">this.methods = this.opts.methods || [</span><br><span class="line">&apos;HEAD&apos;,</span><br><span class="line">&apos;OPTIONS&apos;,</span><br><span class="line">&apos;GET&apos;,</span><br><span class="line">&apos;PUT&apos;,</span><br><span class="line">&apos;PATCH&apos;,</span><br><span class="line">&apos;POST&apos;,</span><br><span class="line">&apos;DELETE&apos;</span><br><span class="line">];</span><br><span class="line"></span><br><span class="line">this.params = &#123;&#125;;</span><br><span class="line">this.stack = [];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>首先是</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">if (!(this instanceof Router)) &#123;</span><br><span class="line">  return new Router(opts);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这是常用的<strong>去 new</strong>的方式，所以我们可以在引入 koa-router 时：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">const router = require(&apos;koa-router&apos;)()</span><br></pre></td></tr></table></figure>
+
+<p>而不用：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">const router = new require(&apos;koa-router&apos;)() // 这样也是没问题的</span><br></pre></td></tr></table></figure>
+
+<p><strong>this.methods</strong>:
+在后面要讲的 allowedMethods 方法中要用到的，目的是响应 options 请求和请求出错的处理。</p>
+<p><strong>this.params</strong>:
+全局的路由参数处理的中间件组成的对象。</p>
+<p><strong>this.stack</strong>:
+其实就是各个路由(Layer)实例组成的数组。每次处理请求时都需要循环这个数组找到匹配的路由。</p>
+<p><strong>Layer</strong>: 创建各个路由实例</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">function Layer(path, methods, middleware, opts) &#123;</span><br><span class="line">  ...</span><br><span class="line"></span><br><span class="line">  this.stack = Array.isArray(middleware) ? middleware : [middleware];</span><br><span class="line"></span><br><span class="line">  // 为给后面的allowedMthods处理</span><br><span class="line">  methods.forEach(function(method) &#123;</span><br><span class="line">    var l = this.methods.push(method.toUpperCase());</span><br><span class="line">    if (this.methods[l-1] === &apos;GET&apos;) &#123;</span><br><span class="line">      // 如果是get请求，则支持head请求</span><br><span class="line">      this.methods.unshift(&apos;HEAD&apos;);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;, this);</span><br><span class="line"></span><br><span class="line">  // 确保路由的每个中间件都是函数</span><br><span class="line">  this.stack.forEach(function(fn) &#123;</span><br><span class="line">    var type = (typeof fn);</span><br><span class="line">    if (type !== &apos;function&apos;) &#123;</span><br><span class="line">      throw new Error(</span><br><span class="line">        methods.toString() + &quot; `&quot; + (this.opts.name || path) +&quot;`: `middleware` &quot;</span><br><span class="line">        + &quot;must be a function, not `&quot; + type + &quot;`&quot;</span><br><span class="line">      );</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;, this);</span><br><span class="line">  this.path = path;</span><br><span class="line">  // 利用path-to-rege模块生产的路径的正则表达式</span><br><span class="line">  this.regexp = pathToRegExp(path, this.paramNames, this.opts);</span><br><span class="line"></span><br><span class="line">  ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这里的<code>this.stack</code>和<code>Router</code>中的不同，这里的是路由所有的中间件的数组。（一个路由可以有多个中间件）</p>
+<h2 id="router-register"><a href="#router-register" class="headerlink" title="router.register()"></a>router.register()</h2><p><strong>作用：注册路由</strong></p>
+<p>从上一篇的代码结构图中可以看出，<code>Router</code>的几个实例方法都直接或简介地调用了<code>register</code>方法，可见，它应该是比较核心的函数, 代码不长，我们一行行看一下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Router.prototype.register = function (path, methods, middleware, opts) &#123;</span><br><span class="line">  opts = opts || &#123;&#125;;</span><br><span class="line">  var router = this;</span><br><span class="line"></span><br><span class="line">  // 全部路由</span><br><span class="line">  var stack = this.stack;</span><br><span class="line"></span><br><span class="line">  // 说明路由的path是支持数组的</span><br><span class="line">  // 如果是数组的话，需要递归调用register来注册路由</span><br><span class="line">  // 因为一个path对应一个路由</span><br><span class="line">  if (Array.isArray(path)) &#123;</span><br><span class="line">    path.forEach(function (p) &#123;</span><br><span class="line">      router.register.call(router, p, methods, middleware, opts);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    return this;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  // 创建路由，路由就是Layer的实例</span><br><span class="line">  // mthods 是路由处理的http方法</span><br><span class="line">  // 最后一个参数对象最终是传给Layer模块中的path-to-regexp模块接口调用的</span><br><span class="line">  var route = new Layer(path, methods, middleware, &#123;</span><br><span class="line">    end: opts.end === false ? opts.end : true,</span><br><span class="line">    name: opts.name,</span><br><span class="line">    sensitive: opts.sensitive || this.opts.sensitive || false,</span><br><span class="line">    strict: opts.strict || this.opts.strict || false,</span><br><span class="line">    prefix: opts.prefix || this.opts.prefix || &quot;&quot;,</span><br><span class="line">    ignoreCaptures: opts.ignoreCaptures</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  // 处理路径前缀</span><br><span class="line">  if (this.opts.prefix) &#123;</span><br><span class="line">    route.setPrefix(this.opts.prefix);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  // 将全局的路由参数添加到每个路由中</span><br><span class="line">  Object.keys(this.params).forEach(function (param) &#123;</span><br><span class="line">    route.param(param, this.params[param]);</span><br><span class="line">  &#125;, this);</span><br><span class="line"></span><br><span class="line">  // 往路由数组中添加新创建的路由</span><br><span class="line">  stack.push(route);</span><br><span class="line"></span><br><span class="line">  return route;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这里的<code>this.stack</code>和<code>Router</code>中的不同，这里的是路由所有的中间件的数组。（一个路由可以有多个中间件）</p>
+<h2 id="router-verb"><a href="#router-verb" class="headerlink" title="router.verb()"></a>router.verb()</h2><p><strong>verb =&gt; get|put|post|patch|delete<br>作用：注册路由</strong></p>
+<p>这是<code>koa-router</code>提供的直接注册相应 http 方法的路由，但最终还是会调用<code>register</code>方法如：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">router.get(&apos;/user&apos;, function(ctx, next)&#123;...&#125;)</span><br></pre></td></tr></table></figure>
+
+<p>和下面利用<code>register</code>方法等价：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">router.register(&apos;/user&apos;, [&apos;get&apos;], [function(ctx, next)&#123;...&#125;])</span><br></pre></td></tr></table></figure>
+
+<p>可以看到直接使用<code>router.verb</code>注册路由会方便很多。来看看代码：<br>你会发现<code>router.js</code>的代码里并没有<code>Router.prototype.get</code>的代码出现，原因是它还依赖了上面提到的<code>methods</code>模块来实现。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">// 这里的methods就是上面的methods模块提供的数组</span><br><span class="line">methods.forEach(function (method) &#123;</span><br><span class="line">  Router.prototype[method] = function (name, path, middleware) &#123;</span><br><span class="line">    var middleware;</span><br><span class="line"></span><br><span class="line">    // 这段代码做了两件事：</span><br><span class="line">    // 1.name 参数是可选的，所以要做一些参数置换的处理</span><br><span class="line">    // 2.将所有路由中间件合并成一个数组</span><br><span class="line">    if (typeof path === &apos;string&apos; || path instanceof RegExp) &#123;</span><br><span class="line">      middleware = Array.prototype.slice.call(arguments, 2);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      middleware = Array.prototype.slice.call(arguments, 1);</span><br><span class="line">      path = name;</span><br><span class="line">      name = null;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 调用register方法</span><br><span class="line">    this.register(path, [method], middleware, &#123;</span><br><span class="line">      name: name</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    return this;</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="router-routes"><a href="#router-routes" class="headerlink" title="router.routes()"></a>router.routes()</h2><p>** 作用：启动路由 **</p>
+<p>这是在 koa 中配置路由的重要一步：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">var router = require(&apos;koa-router&apos;)();</span><br><span class="line">...</span><br><span class="line">app.use(router.routes())</span><br></pre></td></tr></table></figure>
+
+<p>就这样，<code>koa-router</code>就启动了，所以我们也一定会很好奇这个<code>routes</code>函数到底做了什么,但可以肯定<code>router.routes()</code>返回了一个中间件函数。<br>函数体长了一点，简化一下看下整体轮廓：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Router.prototype.routes = Router.prototype.middleware = function () &#123;</span><br><span class="line">  var router = this;</span><br><span class="line">  var dispatch = function dispatch(ctx, next) &#123;</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">  dispatch.router = this;</span><br><span class="line">  return dispatch;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这里形成了一个闭包，在<code>routes</code>函数内部返回了一个<code>dispatch</code>函数作为中间件。<br>接下来看下<code>dispatch</code>函数的实现：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">var dispatch = function dispatch(ctx, next) &#123;</span><br><span class="line">    var path = router.opts.routerPath || ctx.routerPath || ctx.path;</span><br><span class="line"></span><br><span class="line">    // router.match函数内部遍历所有路由（this.stach）,</span><br><span class="line">    // 根据路径和请求方法找到对应的路由</span><br><span class="line">    // 返回的matched对象为：</span><br><span class="line">    /*</span><br><span class="line">      var matched = &#123;</span><br><span class="line">        path: [], // 保存了path匹配的路由数组</span><br><span class="line">        pathAndMethod: [], // 保存了path和methods都匹配的路由数组</span><br><span class="line">        route: false // 是否有对应的路由</span><br><span class="line">      &#125;;</span><br><span class="line">    */</span><br><span class="line">    var matched = router.match(path, ctx.method);</span><br><span class="line">    var layerChain, layer, i;</span><br><span class="line">    if (ctx.matched) &#123;</span><br><span class="line">      ctx.matched.push.apply(ctx.matched, matched.path);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      ctx.matched = matched.path;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 如果没有对应的路由，则直接进入下一个中间件</span><br><span class="line">    if (!matched.route) return next();</span><br><span class="line"></span><br><span class="line">    // 找到正确的路由的path</span><br><span class="line">    var mostSpecificPath = matched.pathAndMethod[matched.pathAndMethod.length - 1].path;</span><br><span class="line">    ctx._matchedRoute = mostSpecificPath;</span><br><span class="line"></span><br><span class="line">    // 使用reduce方法将路由的所有中间件形成一条链</span><br><span class="line">    layerChain = matched.pathAndMethod.reduce(function(memo, layer) &#123;</span><br><span class="line"></span><br><span class="line">      // 在每个路由的中间件执行之前，根据参数不同，设置 ctx.captures 和 ctx.params</span><br><span class="line">      // 这就是为什么我们可以直接在中间件函数中直接使用 ctx.params 来读取路由参数信息了</span><br><span class="line">      memo.push(function(ctx, next) &#123;</span><br><span class="line"></span><br><span class="line">        // 返回路由的参数的key</span><br><span class="line">        ctx.captures = layer.captures(path, ctx.captures);</span><br><span class="line"></span><br><span class="line">        // 返回参数的key和对应的value组成的对象</span><br><span class="line">        ctx.params = layer.params(path, ctx.captures, ctx.params);</span><br><span class="line"></span><br><span class="line">        // 执行下一个中间件</span><br><span class="line">        return next();</span><br><span class="line">      &#125;);</span><br><span class="line"></span><br><span class="line">      // 将上面另外加的中间件和已有的路由中间件合并到一起</span><br><span class="line">      // 所以最终 layerChain 将会是一个中间件的数组</span><br><span class="line">      return memo.concat(layer.stack);</span><br><span class="line">    &#125;, []);</span><br><span class="line"></span><br><span class="line">    // 最后调用上面提到的 compose 模块提供的方法，返回将 layerChain (中间件的数组)</span><br><span class="line">    // 顺序执行所有中间件的执行函数， 并立即执行。</span><br><span class="line">    return compose(layerChain)(ctx, next);</span><br><span class="line">  &#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="router-allowMethods"><a href="#router-allowMethods" class="headerlink" title="router.allowMethods()"></a>router.allowMethods()</h2><p><strong>作用： 当请求出错时的处理逻辑</strong></p>
+<p>同样也是 koa 中配置路由的中一步：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">var router = require(&apos;koa-router&apos;)();</span><br><span class="line">...</span><br><span class="line">app.use(router.routes())</span><br><span class="line">app.use(router.allowMethods())</span><br></pre></td></tr></table></figure>
+
+<p>可以看出，该方法也是闭包内返回了中间件函数。我们将代码简化一下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">Router.prototype.allowedMethods = function (options) &#123;</span><br><span class="line">  options = options || &#123;&#125;;</span><br><span class="line">  var implemented = this.methods;</span><br><span class="line">  return function allowedMethods(ctx, next) &#123;</span><br><span class="line">    return next().then(function() &#123;</span><br><span class="line">      var allowed = &#123;&#125;;</span><br><span class="line"></span><br><span class="line">      if (!ctx.status || ctx.status === 404) &#123;</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        if (!~implemented.indexOf(ctx.method)) &#123;</span><br><span class="line">          if (options.throw) &#123;</span><br><span class="line">            ...</span><br><span class="line">          &#125; else &#123;</span><br><span class="line">            ctx.status = 501;</span><br><span class="line">            ctx.set(&apos;Allow&apos;, allowedArr);</span><br><span class="line">          &#125;</span><br><span class="line">        &#125; else if (allowedArr.length) &#123;</span><br><span class="line">          if (ctx.method === &apos;OPTIONS&apos;) &#123;</span><br><span class="line">            ctx.status = 204;</span><br><span class="line">            ctx.set(&apos;Allow&apos;, allowedArr);</span><br><span class="line">          &#125; else if (!allowed[ctx.method]) &#123;</span><br><span class="line">            if (options.throw) &#123;</span><br><span class="line">              ...</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">              ctx.status = 405;</span><br><span class="line">              ctx.set(&apos;Allow&apos;, allowedArr);</span><br><span class="line">            &#125;</span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>眼尖的同学可能会看到一些<code>http code</code> ： <code>404</code>, <code>501</code>, <code>204</code>, <code>405</code></p>
+<p>那这个函数其实就是当所有中间件函数执行完了，并且请求出错了进行相应的处理：</p>
+<ol>
+<li><p>如果请求的方法 <code>koa-router</code> 不支持并且没有设置 <code>throw</code> 选项，则返回 501(未实现)</p>
+</li>
+<li><p>如果是 <code>options</code> 请求，则返回 <code>204(无内容)</code></p>
+</li>
+<li><p>如果请求的方法支持但没有设置 <code>throw 选项</code>，则返回 <code>405(不允许此方法 )</code></p>
+</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>粗略浅析了这么些，能大概知道了 koa-router 的工作原理。笔者能力有限，有错误还请指出。</p>
+
+        </section>
+    </article>
+    
+        <!-- disqus 评论框 start -->
+        <div class="comment">
+            <div id="disqus_thread" class="disqus-thread">
+              <i>Loading comments box needs to over the wall</i>
+            </div>
+        </div>
+        <!-- disqus 评论框 end -->
+    
+    
+        <!-- livere 评论框 start -->
+        <div class="comment">
+            <div id="lv-container" data-id="city" data-uid="YYY123"></div>
+        </div>
+        <!-- livere 评论框 end -->
+        
+  </div>
+  <aside>
+    
+    <div class="toc-container">
+        <h1>目录</h1>
+        <div class="content">
+            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#代码结构"><span class="toc-number"></span> <span class="toc-text">代码结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#执行流程"><span class="toc-number"></span> <span class="toc-text">执行流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#第三方模块"><span class="toc-number"></span> <span class="toc-text">第三方模块</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Router-amp-Layer"><span class="toc-number"></span> <span class="toc-text">Router &amp; Layer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#router-register"><span class="toc-number"></span> <span class="toc-text">router.register()</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#router-verb"><span class="toc-number"></span> <span class="toc-text">router.verb()</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#router-routes"><span class="toc-number"></span> <span class="toc-text">router.routes()</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#router-allowMethods"><span class="toc-number"></span> <span class="toc-text">router.allowMethods()</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number"></span> <span class="toc-text">总结</span></a>
+        </div>
+    </div>
+    
+  </aside>
+</main>
+
+<!-- disqus 公共JS代码 -->
+<script type="text/javascript">
+  /* * * CONFIGURATION VARIABLES * * */
+  var disqus_shortname = "yanbo-Disqus";
+  var disqus_identifier = "http://yoursite.com/2019/07/13/koa-router源码分析/";
+  var disqus_url = "http://yoursite.com/2019/07/13/koa-router源码分析/";
+
+  isAgent(getDisqus)
+
+  // determine user agent in China
+  function isAgent(cb) {
+    var url = '//graph.facebook.com/feed?callback=h';
+    var xhr = new XMLHttpRequest();
+    var called = false;
+    xhr.open('GET', url);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+      called = true;
+      cb(true);
+      }
+    };
+    xhr.send();
+    // timeout 1s, this facebook API is very fast.
+    setTimeout(function() {
+      if (!called) {
+      xhr.abort();
+      cb(false)
+      }
+    }, 1000);
+  }
+
+  function getDisqus(isAgent) {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; 
+    dsq.async = true
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq)
+  }
+</script>
+<!-- disqus 公共JS代码 end -->
+
+
+<script type="text/javascript">
+  (function(d, s) {
+      var j, e = d.getElementsByTagName(s)[0];
+
+      if (typeof LivereTower === 'function') { return; }
+
+      j = d.createElement(s);
+      j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+      j.async = true;
+
+      e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+
+  <footer>
+  <div class="copyright">
+    <div>
+      &copy; 2019 | Powered by <a href="https://hexo.io" target="_blank">Hexo</a>&nbsp
+    </div>
+    <div>
+      Theme by <a href="https://github.com/lewis-geek/hexo-theme-Aath" target="_blank">Aath</a>
+    </div>
+  </div>
+</footer>
+
+
+<script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script src="/lib/in-view.min.js"></script>
+<script src="/lib/lodash.min.js"></script>
+<script>
+  var isDown = true
+  var oldY = 0
+  inView.offset(50)
+
+  document.body.addEventListener('touchstart', function(){});
+  
+  window.addEventListener('scroll', _.throttle(e => {
+    var currentY = window.scrollY
+    if((oldY - currentY) < 0) {
+      isDown = true
+    } else {
+      isDown = false
+    }
+    oldY = currentY
+  }, 250))
+
+  $("article img").each(function() {
+      var strA = "<a data-fancybox='gallery' href='" + this.src + "'></a>";
+      $(this).wrapAll(strA);
+  });
+
+  $('.toc-link').each(function() {
+      var href = $(this).attr("href");
+      
+      inView(href).on('exit', () => {
+        if (isDown) {
+          handleActive(href)
+        }
+      })
+
+      inView(href).on('enter', () => {
+        if (!isDown) {
+          handleActive(href)
+        }
+      })
+
+      this.onclick = function(e) {
+        var pos = $(href).offset().top - 10;
+        $("html,body").animate({scrollTop: pos}, 300);
+        setTimeout(() => {
+          handleActive(href)
+        }, 350)
+        return false
+      }
+  })
+
+  function handleActive(href) {
+    document.querySelectorAll('.toc-link').forEach(elm => {
+      elm.classList.remove('active')
+    })
+    document.querySelector(".toc [href='"+ href +"']").classList.add('active')
+  }
+</script>
+<script src="/lib/jquery.fancybox.min.js"></script>
+
+
+</body>
+</html>
